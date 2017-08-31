@@ -1,0 +1,10 @@
+{
+  "required": false,
+  "minVersion": "0.5.11",
+  "compatibilityLevel": "JAVA_8",
+  "package": "me.dags.optifix.mixin",
+  "refmap": "mixin.optifix.refmap.json",
+  "mixins": [
+    "MixinChunkCache"
+  ]
+}

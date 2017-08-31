@@ -1,0 +1,103 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name 'forge'
+            url 'http://files.minecraftforge.net/maven'
+        }
+        maven {
+            name 'm2'
+            url 'https://plugins.gradle.org/m2'
+        }
+        maven {
+            name 'sponge'
+            url 'https://repo.spongepowered.org/maven'
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.4-SNAPSHOT'
+        classpath 'gradle.plugin.mnm.mods.kappa:ap-ide:1.0.5'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle.tweaker-client'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'mnm.gradle.ap-ide'
+
+minecraft {
+    version = "1.10.2"
+    mappings = "snapshot_20160630"
+    runDir = 'run'
+    tweakClass = 'me.dags.optifix.launch.OptiFixTweaker'
+}
+
+group = 'me.dags'
+version = "1.0-mc$minecraft.version"
+
+targetCompatibility = sourceCompatibility = "1.8"
+
+repositories {
+    maven {
+        name 'sponge'
+        url 'https://repo.spongepowered.org/maven'
+    }
+}
+
+dependencies {
+    compile('org.spongepowered:mixin:0.6.11-SNAPSHOT') {
+        transitive = false
+    }
+    factory 'org.spongepowered:mixin:0.6.11-SNAPSHOT'
+}
+
+processor {
+    options.reobfSrgFile = project.tasks.genSrgs.mcpToSrg.path
+}
+
+sourceSets {
+    main {
+        refMap = 'mixin.optifix.refmap.json'
+    }
+}
+
+mixin {
+//    add sourceSets.main, 'mixin.optifix.refmap.json'
+    defaultObfuscationEnv notch
+}
+
+def commonManifest = [
+        'Built-By'              : 'ForgeGradle',
+        'Implementation-Vendor' : 'dags',
+        'Implementation-Title'  : project.name,
+        'Implementation-Version': project.version,
+        'TweakClass'            : 'me.dags.optifix.launch.OptiFixLoaderTweaker',
+        'TweakName'             : project.name,
+        'TweakVersion'          : project.version,
+        'TweakAuthor'           : 'dags'
+]
+
+jar {
+    classifier 'minimal'
+    afterEvaluate {
+        manifest {
+            attributes commonManifest
+        }
+    }
+}
+
+task allJar(type: Jar) {
+    from sourceSets.main.output
+    from configurations.compile.collect { zipTree(it) }
+    exclude 'META-INF/**'
+    exclude 'dummyThing'
+
+    manifest {
+        attributes commonManifest
+    }
+}
+
+artifacts.archives allJar
+
+reobf {
+    allJar {}
+}
